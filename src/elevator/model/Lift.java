@@ -1,9 +1,13 @@
 package src.elevator.model;
 
+import java.util.TreeSet;
+
 public class Lift{
     private int currentFloor;
     private LiftMovement movement;
     private Building building;
+    private TreeSet<Integer> stopsAbove;
+    private TreeSet<Integer> stopsBelow;
 
     public Lift(int currentFloor, LiftMovement movement){
         if(movement == null){
@@ -41,5 +45,42 @@ public class Lift{
             throw new IllegalArgumentException("Floor " + this.currentFloor + " is outside building range " + building.getMinFloor() + " to " + building.getMaxFloor());
         }
         this.building = building;
+    }
+
+    void addStop(int floor){
+        if(!isValidDestination(floor)){
+            throw new IllegalArgumentException("Floor " + floor + " is not a valid destination for this lift.");
+        }
+        if(floor > currentFloor) stopsAbove.add(floor);
+        else if (floor < currentFloor) stopsBelow.add(floor);
+        else throw new IllegalArgumentException("The requested floor is the same as the current floor.");
+    }
+
+    Integer getNextStop(){
+        if(movement == LiftMovement.MOVING_UP){
+            if(!stopsAbove.isEmpty()) return stopsAbove.pollFirst();
+            if(!stopsBelow.isEmpty()) {
+                movement = LiftMovement.MOVING_DOWN;
+                return stopsBelow.pollLast();
+            }
+            movement = LiftMovement.IDLE;
+            return null;
+        } else if (movement == LiftMovement.MOVING_DOWN) {
+            if(!stopsBelow.isEmpty()) return stopsBelow.pollLast();
+            if(!stopsAbove.isEmpty()){
+                movement = LiftMovement.MOVING_UP;
+                return stopsAbove.pollFirst();
+            }
+            movement = LiftMovement.IDLE;
+            return null;
+        } else {
+            if(!stopsAbove.isEmpty()) return stopsAbove.pollFirst();
+            if(!stopsBelow.isEmpty()) {
+                movement = LiftMovement.MOVING_DOWN;
+                return stopsBelow.pollLast();
+            }
+            movement = LiftMovement.IDLE;
+            return null;
+        }
     }
 }
