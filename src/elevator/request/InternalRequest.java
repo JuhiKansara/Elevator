@@ -13,6 +13,7 @@ public class InternalRequest{
         if(!lift.isValidDestination(requestToFloorNum)){
             throw new IllegalArgumentException("The destination floor " + requestToFloorNum + " is not in the range of " + lift.getBuilding().getMinFloor() + " to " + lift.getBuilding().getMaxFloor());
         }
+        lift.addStop(requestToFloorNum);
         this.requestToFloorNum = requestToFloorNum;
         this.lift = lift;
     }

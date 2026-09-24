@@ -47,7 +47,7 @@ public class Lift{
         this.building = building;
     }
 
-    void addStop(int floor){
+    public void addStop(int floor){
         if(!isValidDestination(floor)){
             throw new IllegalArgumentException("Floor " + floor + " is not a valid destination for this lift.");
         }
