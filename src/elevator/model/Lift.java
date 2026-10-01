@@ -2,12 +2,13 @@ package src.elevator.model;
 
 import java.util.TreeSet;
 
-public class Lift{
+public class Lift {
     private int currentFloor;
     private LiftMovement movement;
     private Building building;
-    private TreeSet<Integer> stopsAbove;
-    private TreeSet<Integer> stopsBelow;
+    private TreeSet<Integer> stopsAbove = new TreeSet<>();
+    private TreeSet<Integer> stopsBelow = new TreeSet<>();
+    private Integer currentTarget = null;
 
     public Lift(int currentFloor, LiftMovement movement){
         if(movement == null){
@@ -17,15 +18,10 @@ public class Lift{
         this.movement = movement;
     }
 
-    public int getCurrentFloor(){
-        return currentFloor;
-    }
-    public LiftMovement getMovement(){
-        return movement;
-    }
-    public Building getBuilding(){
-        return building;
-    }
+    public int getCurrentFloor(){ return currentFloor; }
+    public LiftMovement getMovement(){ return movement; }
+    public Building getBuilding(){ return building; }
+    public Integer getCurrentTarget(){ return currentTarget; }
 
     public boolean isValidDestination(int floor){
         if(building == null){
@@ -52,20 +48,20 @@ public class Lift{
             throw new IllegalArgumentException("Floor " + floor + " is not a valid destination for this lift.");
         }
         if(floor > currentFloor) stopsAbove.add(floor);
-        else if (floor < currentFloor) stopsBelow.add(floor);
+        else if(floor < currentFloor) stopsBelow.add(floor);
         else throw new IllegalArgumentException("The requested floor is the same as the current floor.");
     }
 
-    Integer getNextStop(){
+    public Integer getNextStop(){
         if(movement == LiftMovement.MOVING_UP){
             if(!stopsAbove.isEmpty()) return stopsAbove.pollFirst();
-            if(!stopsBelow.isEmpty()) {
+            if(!stopsBelow.isEmpty()){
                 movement = LiftMovement.MOVING_DOWN;
                 return stopsBelow.pollLast();
             }
             movement = LiftMovement.IDLE;
             return null;
-        } else if (movement == LiftMovement.MOVING_DOWN) {
+        } else if(movement == LiftMovement.MOVING_DOWN){
             if(!stopsBelow.isEmpty()) return stopsBelow.pollLast();
             if(!stopsAbove.isEmpty()){
                 movement = LiftMovement.MOVING_UP;
@@ -74,13 +70,47 @@ public class Lift{
             movement = LiftMovement.IDLE;
             return null;
         } else {
-            if(!stopsAbove.isEmpty()) return stopsAbove.pollFirst();
-            if(!stopsBelow.isEmpty()) {
+            if(!stopsAbove.isEmpty()){
+                movement = LiftMovement.MOVING_UP;
+                return stopsAbove.pollFirst();
+            }
+            if(!stopsBelow.isEmpty()){
                 movement = LiftMovement.MOVING_DOWN;
                 return stopsBelow.pollLast();
             }
             movement = LiftMovement.IDLE;
             return null;
         }
+    }
+
+    public void updateTarget(){
+        if(currentTarget == null){
+            currentTarget = getNextStop();
+        }
+    }
+
+    /** Advances this lift by one floor per call. Returns true if the lift actually
+     *  arrived at its current target this tick (a meaningful "doors open" event). */
+    public boolean moveOneFloor(){
+        updateTarget();
+        if(currentTarget == null) return false;  // nothing to do, stays idle
+
+        if(currentFloor < currentTarget) currentFloor++;
+        else if(currentFloor > currentTarget) currentFloor--;
+
+        // Service a pending stop passed along the way, WITHOUT losing currentTarget
+        if(movement == LiftMovement.MOVING_UP && stopsAbove.contains(currentFloor)){
+            stopsAbove.remove(currentFloor);
+        } else if(movement == LiftMovement.MOVING_DOWN && stopsBelow.contains(currentFloor)){
+            stopsBelow.remove(currentFloor);
+        }
+
+        // Arrived at the actual target
+        if(currentFloor == currentTarget){
+            currentTarget = null;
+            updateTarget();
+            return true;
+        }
+        return false;
     }
 }

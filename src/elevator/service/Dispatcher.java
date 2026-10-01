@@ -21,7 +21,7 @@ public class Dispatcher {
         this.building = building;
     }
 
-    void retryPending(){
+    public void retryPending(){
         Iterator<ExternalRequest> it = pendingRequests.iterator();
         while(it.hasNext()){
             ExternalRequest request = it.next();
@@ -43,7 +43,7 @@ public class Dispatcher {
         }
     }
 
-    Lift selectLift(ExternalRequest request){
+    private Lift selectLift(ExternalRequest request){
         Lift bestMatch = null;
         int bestDistance = Integer.MAX_VALUE;
         for(Lift lift : building.getLifts()){
